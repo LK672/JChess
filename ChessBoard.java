@@ -1,15 +1,24 @@
 package JChess;
 import java.awt.*;
 import javax.swing.*;
+import java.awt.event.*;
 
 
+public class ChessBoard extends JFrame implements MouseListener {
 
-public class ChessBoard extends JFrame {
+    JLabel label;
+    Image offScreenImage;
+    Graphics offScreenGraphics;
+
+    public static boolean isHighlighted = false;
+    public static int highlightedRow = -1;
+    public static int highlightedCol = -1;
 
     public static final Color DarkWood = new Color(133,94,66);
     public static final Color Tan = new Color(210, 180, 140);
-    
-    public ChessBoard () {
+    public static final Color Highlight = new Color(248,222,127);
+
+    ChessBoard() {
 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setUndecorated(true);
@@ -17,7 +26,14 @@ public class ChessBoard extends JFrame {
         this.setLocationRelativeTo(null);
         this.setVisible(true);
         this.setResizable(false);
+
+        label = new JLabel ();
+        label.setBounds(0, 0, 800, 800);
+        label.addMouseListener(this);
+
+        add(label);
     }
+
 
     public void drawPieces (Graphics g, String FEN) {
         Graphics2D g2D = (Graphics2D) g;
@@ -91,31 +107,68 @@ public class ChessBoard extends JFrame {
         }
     }
 
-    public void paint (Graphics g) {
+    public void paint(Graphics g) {
+        super.paint(g);
 
-        Graphics2D g2D = (Graphics2D) g;
+        if (offScreenImage == null) {
+            offScreenImage = createImage(getWidth(), getHeight());
+            offScreenGraphics = offScreenImage.getGraphics();
+        }
+
+        offScreenGraphics.setColor(getBackground());
+        offScreenGraphics.fillRect(0, 0, getWidth(), getHeight());
 
         for (int rank = 0; rank < 8; rank++) {
             for (int file = 0; file < 8; file++) {
                 boolean isLightSquare = (rank + file) % 2 != 0;
 
-                if (isLightSquare) {
-                    
-                    g2D.setPaint(DarkWood);
-                    g2D.drawRect(rank*100, file*100, 100, 100);
-                    g2D.fillRect(rank*100, file*100, 100, 100);
-                }
-                else {
-                    g2D.setPaint(Tan);
-                    g2D.drawRect(rank*100, file*100, 100, 100);
-                    g2D.fillRect(rank*100, file*100, 100, 100);
+                if (file == highlightedRow && rank == highlightedCol) {
+                    offScreenGraphics.setColor(Highlight);
+                    offScreenGraphics.fillRect(rank * 100, file * 100, 100, 100);
+                } else if (isLightSquare) {
+                    offScreenGraphics.setColor(DarkWood);
+                    offScreenGraphics.fillRect(rank * 100, file * 100, 100, 100);
+                } else {
+                    offScreenGraphics.setColor(Tan);
+                    offScreenGraphics.fillRect(rank * 100, file * 100, 100, 100);
                 }
             }
         }
-        //starting FEN White: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"; 
-        //starting FEN Black: "RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr"; 
-        drawPieces(g, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+
+        drawPieces(offScreenGraphics, BoardUtil.currFEN);
+
+        // Draw the off-screen image to the screen
+        g.drawImage(offScreenImage, 0, 0, this);
     }
+
+    int i = 0;
+    public void mouseClicked (MouseEvent e) {
+
+        int mouseX = e.getX();
+        int mouseY = e.getY();
+
+        isHighlighted = true;
+        highlightedRow = mouseY / 100;
+        highlightedCol = mouseX / 100;
+        repaint();
+    }
+
+    public void mousePressed (MouseEvent e) {
+
+    }
+
+    public void mouseReleased (MouseEvent e) {
+
+    }
+
+    public void mouseEntered (MouseEvent e) {
+
+    }
+
+    public void mouseExited (MouseEvent e) {
+
+    }
+
 }
 
 
